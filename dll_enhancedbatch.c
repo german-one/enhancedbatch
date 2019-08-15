@@ -289,15 +289,10 @@ DWORD getVar(LPCWSTR lpName) {
 		khint_t k;
 
 		if (*lpName == L'@') {
-
-			if (lpName[1] == L'@') {
-				return GetRun(lpName+2, stringBuffer, STRINGBUFFERMAX);
-			} else {
-				struct sGetExt *ext;
-				for (ext = getExtensionList; ext->name; ++ext) {
-					if (_wcsicmp(lpName, ext->name) == 0) {
-						return ext->fn(stringBuffer, STRINGBUFFERMAX);
-					}
+			struct sGetExt *ext;
+			for (ext = getExtensionList; ext->name; ++ext) {
+				if (_wcsicmp(lpName, ext->name) == 0) {
+					return ext->fn(stringBuffer, STRINGBUFFERMAX);
 				}
 			}
 		}
@@ -391,7 +386,7 @@ MyGetEnvironmentVariableW(LPCWSTR lpName, LPWSTR lpBuffer, DWORD nSize) {
 	varcpy = NULL;
 
 	var = (LPWSTR) lpName;
-	if (lpName && (*lpName != '@' || lpName[1] != '@')) {
+	if (lpName && (*lpName != L'@')) {
 		mod = wcschr(lpName, L';');
 		if (mod) {
 			var = varcpy = _wcsdup(lpName);
@@ -568,9 +563,15 @@ BOOL WINAPI
 MySetEnvironmentVariableW(LPCWSTR lpName, LPCWSTR lpValue) {
 	if (lpName != NULL) {
 
-		if (lpValue && *lpValue == '@') {
-			if (MyGetEnvironmentVariableW(lpValue, varBuffer, STRINGBUFFERMAX)
-				|| lpValue[1] == '@') {
+		LPWSTR mod = wcsrchr(lpName, L'`');
+		if (mod && *(mod + 1) == L'\0') {
+			// Remove the mod
+			*mod = L'\0';
+			GetRun(lpValue, stringBuffer, STRINGBUFFERMAX);
+			lpValue = stringBuffer;
+		}
+		else if (lpValue && *lpValue == '@') {
+			if (MyGetEnvironmentVariableW(lpValue, varBuffer, STRINGBUFFERMAX)) {
 				lpValue = varBuffer;
 			}
 		}

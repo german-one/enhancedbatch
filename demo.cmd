@@ -6,8 +6,13 @@ Echo Something failed
 Goto :Eof
 )
 
-set "@extensions=1"
 set "@delayedexpansion=1"
+
+::Playing with popen
+set $out`=vol /?
+echo !$out!
+
+pause & cls
 
 ::Save the current state.
 set $prevcolor=!@color!
